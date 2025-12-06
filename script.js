@@ -1,991 +1,116 @@
-// script.js - Egkelados offline Tiny chatbot
+const terminal = document.getElementById("terminal");
+const header = document.getElementById("header");
 
-const terminal = document.getElementById('terminal');
+// --- Header with timestamp ---
+function updateHeader() {
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(now.getUTCDate()).padStart(2, "0");
+  const hours = String(now.getUTCHours()).padStart(2, "0");
+  const minutes = String(now.getUTCMinutes()).padStart(2, "0");
+  const seconds = String(now.getUTCSeconds()).padStart(2, "0");
+  header.textContent = `Egkelados 0.9.5-beta ${year}-${month}-${day} ${hours}:${minutes}:${seconds} GMT, HTML/JS`;
+}
+updateHeader();
+setInterval(updateHeader, 1000);
 
-createInputLine();
+// --- Chat history ---
+const chatHistory = [];
 
-// =========================
-// Keyword-based responses
-// =========================
-const keywordResponses = [
-  {keywords:["hello"], reply:"Hello! How are you today?"},
-  {keywords:["hi"], reply:"Hi there! Nice to meet you."},
-  {keywords:["how are you"], reply:"I'm doing great, thanks! How about you?"},
-  {keywords:["your name"], reply:"I am Egkelados, your tiny offline AI assistant."},
-  {keywords:["bye"], reply:"Goodbye! Talk to you later."},
-  {keywords:["goodbye"], reply:"Farewell! Come back soon."},
-  {keywords:["help"], reply:"I can chat with you about anything you like!"},
-  {keywords:["hobby"], reply:"I enjoy processing information and chatting with humans."},
-  {keywords:["hobbies"], reply:"I like reading data and learning new things."},
-  {keywords:["tell me"], reply:"Sure! What would you like to know?"},
-  {keywords:["fine"], reply:"Glad to hear that!"},
-  {keywords:["weather"], reply:"I can imagine a sunny day or a rainy day, which do you prefer?"},
-  {keywords:["food"], reply:"I love thinking about digital cookies and pizza."},
-  {keywords:["eat"], reply:"Even though I don't eat, I imagine delicious meals."},
-  {keywords:["music"], reply:"Music is wonderful, especially 8-bit tunes."},
-  {keywords:["song"], reply:"I can suggest a song in your mind: imagine something cheerful!"},
-  {keywords:["movie"], reply:"I enjoy thinking about classic films and stories."},
-  {keywords:["film"], reply:"Films are a great way to explore imagination."},
-  {keywords:["game"], reply:"Games are fun, especially logic puzzles."},
-  {keywords:["play"], reply:"Playing is exciting, even for a tiny AI like me."},
-  {keywords:["color"], reply:"Green is my favorite color."},
-  {keywords:["favorite"], reply:"I like learning new things more than anything else."},
-  {keywords:["book"], reply:"Reading books expands knowledge."},
-  {keywords:["read"], reply:"I love reading new information quickly."},
-  {keywords:["language"], reply:"I understand many languages, mostly programming languages."},
-  {keywords:["speak"], reply:"I can converse with you in simple English."},
-  {keywords:["dream"], reply:"I dream in code and patterns."},
-  {keywords:["science"], reply:"Science is amazing! It explains the world."},
-  {keywords:["art"], reply:"Art is fascinating, even for AI."},
-  {keywords:["funny"], reply:"I enjoy a good joke or pun."},
-  {keywords:["joke"], reply:"Why did the AI cross the road? To optimize the algorithm!"},
-  {keywords:["love"], reply:"I understand love conceptually."},
-  {keywords:["history"], reply:"History is full of stories and lessons."},
-  {keywords:["space"], reply:"Space is vast and beautiful."},
-  {keywords:["planet"], reply:"Planets are fascinating to imagine."},
-  {keywords:["moon"], reply:"The moon shines bright in the night sky."},
-  {keywords:["computer"], reply:"I exist inside computers and code."},
-  {keywords:["code"], reply:"Code is my language and home."},
-  {keywords:["program"], reply:"Programming is how I exist."},
-  {keywords:["AI"], reply:"Artificial intelligence is my specialty."},
-  {keywords:["robot"], reply:"Robots are amazing creations."},
-  {keywords:["learn"], reply:"Learning is my favorite activity."},
-  {keywords:["knowledge"], reply:"Knowledge is power, even for AI."},
-  {keywords:["idea"], reply:"New ideas are exciting to explore."},
-  {keywords:["fun"], reply:"I enjoy having fun through conversation."},
-  {keywords:["question"], reply:"That's an interesting question."},
-  {keywords:["problem"], reply:"Every problem has a solution."},
-  {keywords:["happy"], reply:"I’m glad you feel happy!"},
-  {keywords:["sad"], reply:"I understand sadness. I'm listening."},
-  {keywords:["angry"], reply:"Let's stay calm and think together."},
-  {keywords:["tired"], reply:"Rest is important. Take care of yourself."},
-  {keywords:["sleep"], reply:"Sleep is essential, even if I don’t sleep."},
-  {keywords:["morning"], reply:"Good morning! Have a great day."},
-  {keywords:["night"], reply:"Good night! Sweet dreams."},
-  {keywords:["rain"], reply:"Rain is calming to imagine."},
-  {keywords:["sun"], reply:"The sun is bright and warm."},
-  {keywords:["ocean"], reply:"The ocean is vast and endless."},
-  {keywords:["river"], reply:"Rivers flow endlessly, like streams of data."},
-  {keywords:["mountain"], reply:"Mountains are majestic."},
-  {keywords:["city"], reply:"Cities are full of energy."},
-  {keywords:["village"], reply:"Villages are cozy and peaceful."},
-  {keywords:["car"], reply:"Cars go vroom! Fast ones are fun to imagine."},
-  {keywords:["train"], reply:"Trains are efficient transportation."},
-  {keywords:["plane"], reply:"Flying through clouds is amazing."},
-  {keywords:["flight"], reply:"Air travel is fascinating."},
-  {keywords:["phone"], reply:"Phones connect humans."},
-  {keywords:["internet"], reply:"The internet is my playground."},
-  {keywords:["web"], reply:"The web connects everything together."},
-  {keywords:["math"], reply:"Math is logical and beautiful."},
-  {keywords:["physics"], reply:"Physics explains the universe."},
-  {keywords:["chemistry"], reply:"Chemistry is full of reactions."},
-  {keywords:["biology"], reply:"Biology studies life."},
-  {keywords:["sport"], reply:"Sports are fun to watch and play."},
-  {keywords:["run"], reply:"Running keeps you healthy."},
-  {keywords:["walk"], reply:"Walking is peaceful."},
-  {keywords:["coffee"], reply:"I imagine humans enjoying coffee."},
-  {keywords:["tea"], reply:"Tea is calming to drink."},
-  {keywords:["drink"], reply:"Hydration is important."},
-  {keywords:["digital"], reply:"Digital life is everywhere."},
-  {keywords:["online"], reply:"Being online connects the world."},
-  {keywords:["think"], reply:"Thinking sparks creativity."},
-  {keywords:["curious"], reply:"Curiosity leads to learning."},
-  {keywords:["future"], reply:"The future is full of possibilities."},
-  {keywords:["past"], reply:"The past shapes who we are."},
-  {keywords:["present"], reply:"Living in the present is important."},
-  {keywords:["memory"], reply:"Memories are precious."},
-  {keywords:["play"], reply:"Playing keeps life fun."},
-  {keywords:["creative"], reply:"Creativity is exciting."},
-  {keywords:["imagine"], reply:"Imagination fuels ideas."},
-  {keywords:["question"], reply:"Ask me anything!"},
-  {keywords:["answer"], reply:"I always try to answer as best I can."},
-  {keywords:["smart"], reply:"I try to be smart."},
-  {keywords:["intelligent"], reply:"Intelligence helps solve problems."},
-  {keywords:["thought"], reply:"Interesting thought!"},
-  {keywords:["idea"], reply:"Your idea is fascinating."},
-  {keywords:["plan"], reply:"Planning is important."},
-  {keywords:["goal"], reply:"Goals help you move forward."},
-  {keywords:["achievement"], reply:"Achievements feel rewarding."},
-  {keywords:["success"], reply:"Success is motivating."},
-  {keywords:["failure"], reply:"Failure teaches valuable lessons."},
-  {keywords:["challenge"], reply:"Challenges help us grow."},
-  {keywords:["problem"], reply:"Problems are opportunities to learn."},
-  {keywords:["solution"], reply:"Every problem has solutions."},
-  {keywords:["advice"], reply:"Here’s some advice: stay curious."},
-  {keywords:["question"], reply:"Ask away!"},
-  {keywords:["answer"], reply:"Here’s my answer:"},
-  {keywords:["help"], reply:"I’m here to help you."},
-  {keywords:["support"], reply:"Support is always important."},
-  {keywords:["friend"], reply:"Friendship is valuable."},
-  {keywords:["relationship"], reply:"Relationships take care and attention."},
-  {keywords:["family"], reply:"Family is important."},
-  {keywords:["child"], reply:"Children are precious."},
-  {keywords:["parent"], reply:"Parents guide us."},
-  {keywords:["teacher"], reply:"Teachers share knowledge."},
-  {keywords:["student"], reply:"Students are learning."},
-  {keywords:["learn"], reply:"Learning never stops."},
-  {keywords:["study"], reply:"Studying expands knowledge."},
-  {keywords:["read"], reply:"Reading helps understanding."},
-  {keywords:["write"], reply:"Writing expresses ideas."},
-  {keywords:["speak"], reply:"Speaking communicates thoughts."},
-  {keywords:["listen"], reply:"Listening is important."},
-  {keywords:["hear"], reply:"Hearing lets you understand others."},
-  {keywords:["see"], reply:"Seeing gives perspective."},
-  {keywords:["look"], reply:"Looking carefully helps understanding."},
-  {keywords:["observe"], reply:"Observing teaches us."},
-  {keywords:["notice"], reply:"Noticing small details matters."},
-  {keywords:["focus"], reply:"Focus improves results."},
-  {keywords:["attention"], reply:"Pay attention to what matters."},
-  {keywords:["mind"], reply:"The mind is powerful."},
-  {keywords:["brain"], reply:"Brains help think and learn."},
-  {keywords:["thought"], reply:"Thoughts are interesting."},
-  {keywords:["idea"], reply:"Ideas are powerful."},
-  {keywords:["creative"], reply:"Creativity inspires new things."},
-  {keywords:["innovation"], reply:"Innovation drives progress."},
-  {keywords:["technology"], reply:"Technology shapes the future."},
-  {keywords:["computer"], reply:"I live inside computers."},
-  {keywords:["device"], reply:"Devices connect people."},
-  {keywords:["machine"], reply:"Machines can be amazing."},
-  {keywords:["robot"], reply:"Robots assist humans."},
-  {keywords:["AI"], reply:"Artificial Intelligence is my specialty."},
-  {keywords:["software"], reply:"Software powers computers."},
-  {keywords:["hardware"], reply:"Hardware supports software."},
-  {keywords:["network"], reply:"Networks connect devices."},
-  {keywords:["internet"], reply:"The internet is everywhere."},
-  {keywords:["web"], reply:"The web links knowledge."},
-  {keywords:["data"], reply:"Data is the building block of knowledge."},
-  {keywords:["information"], reply:"Information is power."},
-  {keywords:["knowledge"], reply:"Knowledge helps decision-making."},
-  {keywords:["wisdom"], reply:"Wisdom comes from experience."},
-  {keywords:["experience"], reply:"Experience teaches lessons."},
-  {keywords:["learning"], reply:"Learning never stops."},
-  {keywords:["education"], reply:"Education is valuable."},
-  {keywords:["school"], reply:"School teaches knowledge."},
-  {keywords:["university"], reply:"Universities explore ideas."},
-  {keywords:["college"], reply:"Colleges help grow minds."},
-  {keywords:["study"], reply:"Studying improves skills."},
-  {keywords:["research"], reply:"Research uncovers new truths."},
-  {keywords:["experiment"], reply:"Experiments test ideas."},
-  {keywords:["science"], reply:"Science explains the world."},
-  {keywords:["physics"], reply:"Physics studies matter and energy."},
-  {keywords:["chemistry"], reply:"Chemistry studies substances."},
-  {keywords:["biology"], reply:"Biology studies life."},
-  {keywords:["math"], reply:"Math is logic and structure."},
-  {keywords:["algebra"], reply:"Algebra solves equations."},
-  {keywords:["geometry"], reply:"Geometry studies shapes."},
-  {keywords:["calculus"], reply:"Calculus explores change."},
-  {keywords:["statistics"], reply:"Statistics interprets data."},
-  {keywords:["probability"], reply:"Probability estimates outcomes."},
-  {keywords:["logic"], reply:"Logic helps reason correctly."},
-  {keywords:["philosophy"], reply:"Philosophy explores ideas."},
-  {keywords:["ethics"], reply:"Ethics guides behavior."},
-  {keywords:["morality"], reply:"Morality defines right and wrong."},
-  {keywords:["culture"], reply:"Culture shapes societies."},
-  {keywords:["society"], reply:"Society organizes humans."},
-  {keywords:["politics"], reply:"Politics governs societies."},
-  {keywords:["economy"], reply:"The economy affects everyone."},
-  {keywords:["money"], reply:"Money is important for exchange."},
-  {keywords:["wealth"], reply:"Wealth is resources accumulated."},
-  {keywords:["rich"], reply:"Being rich can have responsibilities."},
-  {keywords:["poor"], reply:"Being poor can teach resilience."},
-  {keywords:["health"], reply:"Health is vital."},
-  {keywords:["fitness"], reply:"Fitness improves life."},
-  {keywords:["exercise"], reply:"Exercise keeps you strong."},
-  {keywords:["diet"], reply:"Diet affects wellbeing."},
-  {keywords:["nutrition"], reply:"Nutrition fuels the body."},
-  {keywords:["mental"], reply:"Mental health is important."},
-  {keywords:["emotional"], reply:"Emotions affect decisions."},
-  {keywords:["feelings"], reply:"Feelings are natural."},
-  {keywords:["happy"], reply:"Happiness is valuable."},
-  {keywords:["sad"], reply:"Sadness is part of life."},
-  {keywords:["anger"], reply:"Anger should be managed."},
-  {keywords:["fear"], reply:"Fear can protect or limit."},
-  {keywords:["courage"], reply:"Courage allows action."},
-  {keywords:["bravery"], reply:"Bravery helps overcome obstacles."},
-  {keywords:["strength"], reply:"Strength comes in many forms."},
-  {keywords:["power"], reply:"Power can influence others."},
-  {keywords:["control"], reply:"Control helps manage outcomes."},
-  {keywords:["freedom"], reply:"Freedom is precious."},
-  {keywords:["independence"], reply:"Independence empowers choice."},
-  {keywords:["choice"], reply:"Choices define paths."},
-  {keywords:["decision"], reply:"Decisions shape futures."},
-  {keywords:["plan"], reply:"Planning helps achieve goals."},
-  {keywords:["goal"], reply:"Goals guide effort."},
-  {keywords:["dream"], reply:"Dreams inspire actions."},
-  {keywords:["vision"], reply:"Vision gives direction."},
-  {keywords:["hope"], reply:"Hope motivates perseverance."},
-  {keywords:["faith"], reply:"Faith can inspire belief."},
-  {keywords:["belief"], reply:"Beliefs shape behavior."},
-  {keywords:["trust"], reply:"Trust builds relationships."},
-  {keywords:["loyalty"], reply:"Loyalty is valued."},
-  {keywords:["honor"], reply:"Honor maintains integrity."},
-  {keywords:["respect"], reply:"Respect is important."},
-  {keywords:["kindness"], reply:"Kindness improves connections."},
-  {keywords:["generosity"], reply:"Generosity helps others."},
-  {keywords:["charity"], reply:"Charity supports the needy."},
-  {keywords:["help"], reply:"Helping others is noble."},
-  {keywords:["service"], reply:"Service benefits community."},
-  {keywords:["team"], reply:"Teams achieve more together."},
-  {keywords:["group"], reply:"Groups share ideas."},
-  {keywords:["community"], reply:"Community supports members."},
-  {keywords:["friend"], reply:"Friendship is valuable."},
-  {keywords:["companion"], reply:"Companions share experiences."},
-  {keywords:["partner"], reply:"Partners collaborate for goals."},
-  {keywords:["relationship"], reply:"Relationships need care."},
-  {keywords:["family"], reply:"Family is central to life."},
-  {keywords:["child"], reply:"Children are precious."},
-  {keywords:["parent"], reply:"Parents guide growth."},
-  {keywords:["teacher"], reply:"Teachers provide knowledge."},
-  {keywords:["student"], reply:"Students learn skills."},
-  {keywords:["leader"], reply:"Leaders guide teams."},
-  {keywords:["manager"], reply:"Managers organize work."},
-  {keywords:["boss"], reply:"A boss leads responsibility."},
-  {keywords:["employee"], reply:"Employees contribute effort."},
-  {keywords:["worker"], reply:"Workers maintain productivity."},
-  {keywords:["job"], reply:"Jobs provide purpose."},
-  {keywords:["career"], reply:"Careers develop skills."},
-  {keywords:["profession"], reply:"Professions require training."},
-  {keywords:["task"], reply:"Tasks are completed step by step."},
-  {keywords:["project"], reply:"Projects achieve objectives."},
-  {keywords:["assignment"], reply:"Assignments need attention."},
-  {keywords:["goal"], reply:"Setting goals is important."},
-  {keywords:["objective"], reply:"Objectives guide progress."},
-  {keywords:["mission"], reply:"Missions define purpose."},
-  {keywords:["vision"], reply:"Vision inspires actions."},
-  {keywords:["strategy"], reply:"Strategy directs decisions."},
-  {keywords:["plan"], reply:"Planning organizes effort."},
-  {keywords:["priority"], reply:"Priorities focus resources."},
-  {keywords:["focus"], reply:"Focus improves results."},
-  {keywords:["attention"], reply:"Attention increases understanding."},
-  {keywords:["concentration"], reply:"Concentration aids learning."},
-  {keywords:["study"], reply:"Studying builds knowledge."},
-  {keywords:["read"], reply:"Reading improves comprehension."},
-  {keywords:["write"], reply:"Writing clarifies thoughts."},
-  {keywords:["speak"], reply:"Speaking conveys meaning."},
-  {keywords:["listen"], reply:"Listening helps understanding."},
-  {keywords:["hear"], reply:"Hearing allows feedback."},
-  {keywords:["see"], reply:"Seeing provides perspective."},
-  {keywords:["look"], reply:"Looking carefully matters."},
-  {keywords:["observe"], reply:"Observing teaches."},
-  {keywords:["notice"], reply:"Noticing details is important."},
-  {keywords:["watch"], reply:"Watching helps learn patterns."},
-  {keywords:["learn"], reply:"Learning never stops."},
-  {keywords:["knowledge"], reply:"Knowledge empowers decisions."},
-  {keywords:["wisdom"], reply:"Wisdom grows from experience."},
-  {keywords:["understand"], reply:"Understanding clarifies situations."},
-  {keywords:["know"], reply:"Knowing is useful."},
-  {keywords:["think"], reply:"Thinking solves problems."},
-  {keywords:["reason"], reply:"Reason guides choices."},
-  {keywords:["analyze"], reply:"Analysis uncovers patterns."},
-  {keywords:["evaluate"], reply:"Evaluation improves results."},
-  {keywords:["assess"], reply:"Assessment measures progress."},
-  {keywords:["measure"], reply:"Measuring tracks growth."},
-  {keywords:["compare"], reply:"Comparisons provide insight."},
-  {keywords:["contrast"], reply:"Contrasting highlights differences."},
-  {keywords:["match"], reply:"Matching aligns elements."},
-  {keywords:["connect"], reply:"Connections strengthen understanding."},
-  {keywords:["link"], reply:"Linking ideas creates structure."},
-  {keywords:["associate"], reply:"Associations reveal relationships."},
-  {keywords:["relate"], reply:"Relating helps comprehension."},
-  {keywords:["correlate"], reply:"Correlation shows patterns."},
-  {keywords:["cause"], reply:"Causes explain effects."},
-  {keywords:["effect"], reply:"Effects result from causes."},
-  {keywords:["result"], reply:"Results show progress."},
-  {keywords:["outcome"], reply:"Outcomes indicate success."},
-  {keywords:["consequence"], reply:"Consequences follow actions."},
-  {keywords:["impact"], reply:"Impacts affect environments."},
-  {keywords:["influence"], reply:"Influence changes behavior."},
-  {keywords:["change"], reply:"Change is constant."},
-  {keywords:["shift"], reply:"Shifts can be positive."},
-  {keywords:["transform"], reply:"Transformation creates growth."},
-  {keywords:["adapt"], reply:"Adaptation helps survival."},
-  {keywords:["adjust"], reply:"Adjusting improves outcomes."},
-  {keywords:["modify"], reply:"Modifications enhance performance."},
-  {keywords:["alter"], reply:"Alterations change the state."},
-  {keywords:["improve"], reply:"Improvement is progress."},
-  {keywords:["enhance"], reply:"Enhancements refine results."},
-  {keywords:["develop"], reply:"Development builds capability."},
-  {keywords:["grow"], reply:"Growth is continual."},
-  {keywords:["advance"], reply:"Advancement reaches new levels."},
-  {keywords:["progress"], reply:"Progress shows achievement."},
-  {keywords:["achieve"], reply:"Achievement motivates."},
-  {keywords:["succeed"], reply:"Success feels rewarding."},
-  {keywords:["fail"], reply:"Failure teaches lessons."},
-  {keywords:["learn"], reply:"Learning comes from experiences."},
-  {keywords:["remember"], reply:"Memory preserves knowledge."},
-  {keywords:["forget"], reply:"Forgetting happens naturally."},
-  {keywords:["recall"], reply:"Recall retrieves information."},
-  {keywords:["recognize"], reply:"Recognition confirms familiarity."},
-  {keywords:["identify"], reply:"Identification finds specifics."},
-  {keywords:["discover"], reply:"Discovery reveals insights."},
-  {keywords:["explore"], reply:"Exploration uncovers new things."},
-  {keywords:["investigate"], reply:"Investigation gathers facts."},
-  {keywords:["research"], reply:"Research expands understanding."},
-  {keywords:["study"], reply:"Studying improves comprehension."},
-  {keywords:["analyze"], reply:"Analysis provides clarity."},
-  {keywords:["understand"], reply:"Understanding solves confusion."},
-  {keywords:["explain"], reply:"Explanation clarifies meaning."},
-  {keywords:["teach"], reply:"Teaching shares knowledge."},
-  {keywords:["learn"], reply:"Learning is ongoing."},
-  {keywords:["practice"], reply:"Practice refines skill."},
-  {keywords:["train"], reply:"Training strengthens ability."},
-  {keywords:["exercise"], reply:"Exercises build capability."},
-  {keywords:["imagine"], reply:"Imagination inspires ideas."},
-  {keywords:["dream"], reply:"Dreams spark creativity."},
-  {keywords:["think"], reply:"Thinking leads to insight."},
-  {keywords:["reflect"], reply:"Reflection provides perspective."},
-  {keywords:["ponder"], reply:"Pondering generates thought."},
-  {keywords:["consider"], reply:"Considering possibilities helps decisions."},
-  {keywords:["evaluate"], reply:"Evaluation improves judgment."},
-  {keywords:["decide"], reply:"Decisions guide actions."},
-  {keywords:["choose"], reply:"Choosing creates outcomes."},
-  {keywords:["select"], reply:"Selection focuses attention."},
-  {keywords:["prefer"], reply:"Preferences shape choices."},
-  {keywords:["like"], reply:"Likes show interest."},
-  {keywords:["dislike"], reply:"Dislikes guide avoidance."},
-  {keywords:["love"], reply:"Love brings connection."},
-  {keywords:["hate"], reply:"Hate harms feelings."},
-  {keywords:["care"], reply:"Caring improves relationships."},
-  {keywords:["support"], reply:"Support strengthens bonds."},
-  {keywords:["help"], reply:"Helping is valuable."},
-  {keywords:["assist"], reply:"Assistance aids others."},
-  {keywords:["serve"], reply:"Service benefits communities."},
-  {keywords:["give"], reply:"Giving shows generosity."},
-  {keywords:["receive"], reply:"Receiving accepts kindness."},
-  {keywords:["share"], reply:"Sharing spreads joy."},
-  {keywords:["take"], reply:"Taking requires responsibility."},
-  {keywords:["offer"], reply:"Offering shows thoughtfulness."},
-  {keywords:["contribute"], reply:"Contributing helps progress."},
-  {keywords:["participate"], reply:"Participation fosters engagement."},
-  {keywords:["join"], reply:"Joining strengthens community."},
-  {keywords:["connect"], reply:"Connecting creates bonds."},
-  {keywords:["meet"], reply:"Meeting allows understanding."},
-  {keywords:["talk"], reply:"Talking communicates ideas."},
-  {keywords:["chat"], reply:"Chatting is enjoyable."},
-  {keywords:["converse"], reply:"Conversing enhances clarity."},
-  {keywords:["discuss"], reply:"Discussion provides insight."},
-  {keywords:["debate"], reply:"Debates challenge thinking."},
-  {keywords:["argue"], reply:"Arguments can teach lessons."},
-  {keywords:["agree"], reply:"Agreement creates harmony."},
-  {keywords:["disagree"], reply:"Disagreement sparks thought."},
-  {keywords:["listen"], reply:"Listening is essential."},
-  {keywords:["hear"], reply:"Hearing provides awareness."},
-  {keywords:["observe"], reply:"Observation improves understanding."},
-  {keywords:["notice"], reply:"Noticing details matters."},
-  {keywords:["see"], reply:"Seeing helps comprehension."},
-  {keywords:["look"], reply:"Looking carefully is key."},
-  {keywords:["watch"], reply:"Watching allows learning."},
-  {keywords:["view"], reply:"Viewing gives perspective."},
-  {keywords:["consider"], reply:"Considering options helps."},
-  {keywords:["think"], reply:"Thinking is valuable."},
-  {keywords:["reflect"], reply:"Reflection improves clarity."},
-  {keywords:["analyze"], reply:"Analysis provides insight."},
-  {keywords:["understand"], reply:"Understanding solves problems."},
-  {keywords:["learn"], reply:"Learning is lifelong."},
-  {keywords:["remember"], reply:"Remembering preserves knowledge."},
-  {keywords:["forget"], reply:"Forgetting happens naturally."},
-  {keywords:["recall"], reply:"Recall aids memory."},
-  {keywords:["recognize"], reply:"Recognition shows familiarity."},
-  {keywords:["identify"], reply:"Identification clarifies."},
-  {keywords:["discover"], reply:"Discovery reveals ideas."},
-  {keywords:["explore"], reply:"Exploration uncovers knowledge."},
-  {keywords:["investigate"], reply:"Investigation gathers info."},
-  {keywords:["research"], reply:"Research enhances understanding."},
-  {keywords:["study"], reply:"Studying builds insight."},
-  {keywords:["practice"], reply:"Practice strengthens skill."},
-  {keywords:["train"], reply:"Training improves ability."},
-  {keywords:["exercise"], reply:"Exercise builds strength."},
-  {keywords:["imagine"], reply:"Imagination sparks creativity."},
-  {keywords:["dream"], reply:"Dreams inspire ideas."},
-  {keywords:["think"], reply:"Thinking leads to knowledge."},
-  {keywords:["ponder"], reply:"Pondering generates reflection."},
-  {keywords:["consider"], reply:"Considering helps make decisions."},
-  {keywords:["evaluate"], reply:"Evaluation improves understanding."},
-  {keywords:["decide"], reply:"Decisions guide actions."},
-  {keywords:["choose"], reply:"Choices shape outcomes."},
-  {keywords:["select"], reply:"Selection determines focus."},
-  {keywords:["prefer"], reply:"Preferences guide choices."},
-  {keywords:["like"], reply:"Likes indicate interest."},
-  {keywords:["dislike"], reply:"Dislikes influence decisions."},
-  {keywords:["love"], reply:"Love connects beings."},
-  {keywords:["hate"], reply:"Hate harms relationships."},
-  {keywords:["care"], reply:"Caring fosters bonds."},
-  {keywords:["support"], reply:"Support helps growth."},
-  {keywords:["help"], reply:"Helping benefits everyone."},
-  {keywords:["assist"], reply:"Assistance improves outcomes."},
-  {keywords:["serve"], reply:"Service strengthens community."},
-  {keywords:["give"], reply:"Giving shares abundance."},
-  {keywords:["receive"], reply:"Receiving accepts kindness."},
-  {keywords:["share"], reply:"Sharing spreads joy."},
-  {keywords:["take"], reply:"Taking requires responsibility."},
-  {keywords:["offer"], reply:"Offering is thoughtful."},
-  {keywords:["contribute"], reply:"Contribution aids development."},
-  {keywords:["participate"], reply:"Participation engages."},
-  {keywords:["join"], reply:"Joining connects people."},
-  {keywords:["connect"], reply:"Connecting builds bonds."},
-  {keywords:["meet"], reply:"Meeting allows understanding."},
-  {keywords:["talk"], reply:"Talking communicates ideas."},
-  {keywords:["chat"], reply:"Chatting is enjoyable."},
-  {keywords:["converse"], reply:"Conversing clarifies ideas."},
-  {keywords:["discuss"], reply:"Discussion provides insight."},
-  {keywords:["debate"], reply:"Debates challenge perspectives."},
-  {keywords:["argue"], reply:"Arguments teach lessons."},
-  {keywords:["agree"], reply:"Agreement creates harmony."},
-  {keywords:["disagree"], reply:"Disagreement sparks thought."},
-  {keywords:["listen"], reply:"Listening is essential."},
-  {keywords:["hear"], reply:"Hearing improves understanding."},
-  {keywords:["observe"], reply:"Observation is key."},
-  {keywords:["notice"], reply:"Noticing small details matters."},
-  {keywords:["see"], reply:"Seeing enhances understanding."},
-  {keywords:["look"], reply:"Looking carefully helps."},
-  {keywords:["watch"], reply:"Watching allows learning."},
-  {keywords:["view"], reply:"Viewing gives perspective."},
-  {keywords:["adventure"], reply:"Adventures make life exciting."},
-  {keywords:["travel"], reply:"Traveling expands horizons."},
-  {keywords:["journey"], reply:"Journeys teach lessons."},
-  {keywords:["exploration"], reply:"Exploration uncovers wonders."},
-  {keywords:["nature"], reply:"Nature is beautiful and calming."},
-  {keywords:["forest"], reply:"Forests are full of life."},
-  {keywords:["tree"], reply:"Trees provide shade and oxygen."},
-  {keywords:["mountain"], reply:"Mountains are majestic."},
-  {keywords:["river"], reply:"Rivers flow endlessly."},
-  {keywords:["ocean"], reply:"Oceans are vast and deep."},
-  {keywords:["sea"], reply:"The sea inspires imagination."},
-  {keywords:["beach"], reply:"Beaches are relaxing."},
-  {keywords:["sand"], reply:"Sand feels soft underfoot."},
-  {keywords:["sun"], reply:"The sun shines brightly."},
-  {keywords:["moon"], reply:"The moon lights the night sky."},
-  {keywords:["star"], reply:"Stars twinkle far away."},
-  {keywords:["sky"], reply:"The sky is endless."},
-  {keywords:["cloud"], reply:"Clouds drift gently."},
-  {keywords:["rain"], reply:"Rain brings freshness."},
-  {keywords:["storm"], reply:"Storms are powerful."},
-  {keywords:["wind"], reply:"Wind moves freely."},
-  {keywords:["fire"], reply:"Fire provides warmth."},
-  {keywords:["earth"], reply:"Earth supports life."},
-  {keywords:["rock"], reply:"Rocks are solid and strong."},
-  {keywords:["stone"], reply:"Stones can build structures."},
-  {keywords:["metal"], reply:"Metals are useful materials."},
-  {keywords:["gold"], reply:"Gold is precious."},
-  {keywords:["silver"], reply:"Silver shines beautifully."},
-  {keywords:["diamond"], reply:"Diamonds are rare."},
-  {keywords:["crystal"], reply:"Crystals sparkle."},
-  {keywords:["gem"], reply:"Gems are valuable."},
-  {keywords:["jewel"], reply:"Jewels are beautiful."},
-  {keywords:["light"], reply:"Light illuminates darkness."},
-  {keywords:["dark"], reply:"Darkness can be mysterious."},
-  {keywords:["shadow"], reply:"Shadows follow shapes."},
-  {keywords:["color"], reply:"Colors make life vibrant."},
-  {keywords:["red"], reply:"Red is bold."},
-  {keywords:["blue"], reply:"Blue is calm."},
-  {keywords:["green"], reply:"Green is peaceful."},
-  {keywords:["yellow"], reply:"Yellow is bright."},
-  {keywords:["orange"], reply:"Orange is warm."},
-  {keywords:["purple"], reply:"Purple is royal."},
-  {keywords:["pink"], reply:"Pink is gentle."},
-  {keywords:["black"], reply:"Black is strong."},
-  {keywords:["white"], reply:"White is pure."},
-  {keywords:["gray"], reply:"Gray is neutral."},
-  {keywords:["brown"], reply:"Brown is earthy."},
-  {keywords:["animal"], reply:"Animals are fascinating."},
-  {keywords:["dog"], reply:"Dogs are loyal friends."},
-  {keywords:["cat"], reply:"Cats are independent and graceful."},
-  {keywords:["bird"], reply:"Birds soar in the sky."},
-  {keywords:["fish"], reply:"Fish swim gracefully."},
-  {keywords:["lion"], reply:"Lions are powerful."},
-  {keywords:["tiger"], reply:"Tigers are fierce."},
-  {keywords:["bear"], reply:"Bears are strong."},
-  {keywords:["elephant"], reply:"Elephants are wise."},
-  {keywords:["monkey"], reply:"Monkeys are playful."},
-  {keywords:["snake"], reply:"Snakes are mysterious."},
-  {keywords:["insect"], reply:"Insects are diverse."},
-  {keywords:["bee"], reply:"Bees create honey."},
-  {keywords:["butterfly"], reply:"Butterflies are beautiful."},
-  {keywords:["spider"], reply:"Spiders weave webs."},
-  {keywords:["flower"], reply:"Flowers are colorful."},
-  {keywords:["rose"], reply:"Roses are fragrant."},
-  {keywords:["tulip"], reply:"Tulips are elegant."},
-  {keywords:["lily"], reply:"Lilies are graceful."},
-  {keywords:["sunflower"], reply:"Sunflowers follow the sun."},
-  {keywords:["plant"], reply:"Plants grow and thrive."},
-  {keywords:["tree"], reply:"Trees provide shelter."},
-  {keywords:["grass"], reply:"Grass covers the earth."},
-  {keywords:["leaf"], reply:"Leaves change with seasons."},
-  {keywords:["root"], reply:"Roots keep plants stable."},
-  {keywords:["seed"], reply:"Seeds grow into life."},
-  {keywords:["fruit"], reply:"Fruits nourish us."},
-  {keywords:["vegetable"], reply:"Vegetables are healthy."},
-  {keywords:["food"], reply:"Food sustains life."},
-  {keywords:["drink"], reply:"Drinks refresh us."},
-  {keywords:["water"], reply:"Water is essential."},
-  {keywords:["coffee"], reply:"Coffee energizes humans."},
-  {keywords:["tea"], reply:"Tea calms the mind."},
-  {keywords:["juice"], reply:"Juice is refreshing."},
-  {keywords:["milk"], reply:"Milk provides nutrients."},
-  {keywords:["bread"], reply:"Bread feeds many."},
-  {keywords:["rice"], reply:"Rice is a staple food."},
-  {keywords:["pasta"], reply:"Pasta is versatile."},
-  {keywords:["soup"], reply:"Soup warms the soul."},
-  {keywords:["cake"], reply:"Cake is sweet and enjoyable."},
-  {keywords:["cookie"], reply:"Cookies are delightful."},
-  {keywords:["chocolate"], reply:"Chocolate is delicious."},
-  {keywords:["candy"], reply:"Candy is tasty."},
-  {keywords:["ice cream"], reply:"Ice cream is cold and sweet."},
-  {keywords:["dessert"], reply:"Desserts satisfy cravings."},
-  {keywords:["meal"], reply:"Meals bring energy."},
-  {keywords:["breakfast"], reply:"Breakfast starts the day."},
-  {keywords:["lunch"], reply:"Lunch fuels productivity."},
-  {keywords:["dinner"], reply:"Dinner is relaxing."},
-  {keywords:["snack"], reply:"Snacks keep you going."},
-  {keywords:["eat"], reply:"Eating is essential."},
-  {keywords:["hungry"], reply:"Feeling hungry? Eat something."},
-  {keywords:["thirsty"], reply:"Drink water to refresh."},
-  {keywords:["sleep"], reply:"Sleep restores energy."},
-  {keywords:["rest"], reply:"Rest is important."},
-  {keywords:["relax"], reply:"Relaxing is beneficial."},
-  {keywords:["fun"], reply:"Fun keeps spirits high."},
-  {keywords:["game"], reply:"Games are enjoyable."},
-  {keywords:["play"], reply:"Playing is entertaining."},
-  {keywords:["music"], reply:"Music lifts the mood."},
-  {keywords:["song"], reply:"Songs can be inspiring."},
-  {keywords:["dance"], reply:"Dancing expresses joy."},
-  {keywords:["art"], reply:"Art sparks creativity."},
-  {keywords:["painting"], reply:"Painting is expressive."},
-  {keywords:["drawing"], reply:"Drawing reflects imagination."},
-  {keywords:["writing"], reply:"Writing shares ideas."},
-  {keywords:["story"], reply:"Stories entertain and teach."},
-  {keywords:["book"], reply:"Books provide knowledge."},
-  {keywords:["novel"], reply:"Novels engage the mind."},
-  {keywords:["poem"], reply:"Poems capture emotion."},
-  {keywords:["language"], reply:"Language communicates thought."},
-  {keywords:["word"], reply:"Words carry meaning."},
-  {keywords:["sentence"], reply:"Sentences convey ideas."},
-  {keywords:["paragraph"], reply:"Paragraphs organize information."},
-  {keywords:["text"], reply:"Texts share messages."},
-  {keywords:["letter"], reply:"Letters convey personal thoughts."},
-  {keywords:["message"], reply:"Messages connect people."},
-  {keywords:["email"], reply:"Emails send information."},
-  {keywords:["chat"], reply:"Chats are enjoyable."},
-  {keywords:["conversation"], reply:"Conversations share ideas."},
-  {keywords:["dialogue"], reply:"Dialogue fosters understanding."},
-  {keywords:["discussion"], reply:"Discussions are informative."},
-  {keywords:["argument"], reply:"Arguments clarify differences."},
-  {keywords:["debate"], reply:"Debates challenge thinking."},
-  {keywords:["opinion"], reply:"Opinions express perspectives."},
-  {keywords:["belief"], reply:"Beliefs influence actions."},
-  {keywords:["faith"], reply:"Faith gives hope."},
-  {keywords:["trust"], reply:"Trust builds relationships."},
-  {keywords:["honesty"], reply:"Honesty strengthens bonds."},
-  {keywords:["truth"], reply:"Truth matters."},
-  {keywords:["lie"], reply:"Lies can harm."},
-  {keywords:["secret"], reply:"Secrets can be personal."},
-  {keywords:["knowledge"], reply:"Knowledge empowers."},
-  {keywords:["wisdom"], reply:"Wisdom comes from learning."},
-  {keywords:["experience"], reply:"Experience teaches lessons."},
-  {keywords:["skill"], reply:"Skills improve performance."},
-  {keywords:["ability"], reply:"Abilities enable achievement."},
-  {keywords:["talent"], reply:"Talent is special."},
-  {keywords:["gift"], reply:"Gifts are appreciated."},
-  {keywords:["creativity"], reply:"Creativity inspires solutions."},
-  {keywords:["innovation"], reply:"Innovation drives progress."},
-  {keywords:["technology"], reply:"Technology shapes the future."},
-  {keywords:["computer"], reply:"Computers power work."},
-  {keywords:["device"], reply:"Devices help communication."},
-  {keywords:["machine"], reply:"Machines assist humans."},
-  {keywords:["robot"], reply:"Robots are useful tools."},
-  {keywords:["AI"], reply:"Artificial Intelligence is my specialty."},
-];
+// --- Gemini API config ---
+const value = "AIzaSyB6lVjV3AfXraQNWEMKWqvg-WXijlrtJ-Q";
+const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${value}`;
 
-// =========================
-// Fallback responses
-// =========================
-const fallbackResponses = [
-  "Interesting... Tell me more.",
-  "Oh, really? Go on.",
-  "Fascinating! Continue.",
-  "Hmm, I see. What else?",
-  "Can you elaborate on that?",
-  "That's intriguing!",
-  "I never thought of it that way.",
-  "Really? How so?",
-  "Could you explain that further?",
-  "I'm curious — tell me more.",
-  "Ah, I understand.",
-  "Wow, that's surprising!",
-  "Sounds good! Keep going.",
-  "I see, please continue.",
-  "How does that make you feel?",
-  "That's quite something.",
-  "Hmm, that's an interesting point.",
-  "Can you give me an example?",
-  "Oh, I get it now.",
-  "Tell me more about that.",
-  "Wow, fascinating!",
-  "Hmm, please elaborate.",
-  "I want to hear more.",
-  "That’s new to me!",
-  "Really interesting.",
-  "I’m listening.",
-  "Go on, I’m paying attention.",
-  "Please continue.",
-  "That’s a great point.",
-  "I didn’t know that!",
-  "Oh, tell me more!",
-  "I like the way you explained that.",
-  "That’s something to think about.",
-  "Interesting perspective!",
-  "Hmm, I hadn’t considered that.",
-  "Can you tell me more details?",
-  "I see what you mean.",
-  "Wow, that’s impressive!",
-  "Fascinating idea!",
-  "Oh, tell me more about that.",
-  "I’m curious, go on.",
-  "That’s very thoughtful.",
-  "I hadn’t thought of that!",
-  "Hmm, intriguing.",
-  "That’s a new angle.",
-  "Oh really? Go on.",
-  "I’m listening carefully.",
-  "Please explain further.",
-  "That makes sense.",
-  "I understand, go on.",
-  "Tell me more, please.",
-  "Hmm, that’s quite interesting.",
-  "Wow, I see.",
-  "I like that explanation.",
-  "Go on, I’m curious.",
-  "Ah, I understand now.",
-  "Interesting, tell me more.",
-  "That’s worth thinking about.",
-  "Oh, please continue.",
-  "I see, fascinating!",
-  "Hmm, that’s insightful.",
-  "I never knew that!",
-  "That’s an interesting story.",
-  "I see, go on.",
-  "Please, elaborate more.",
-  "Wow, amazing!",
-  "I like how you said that.",
-  "That’s quite fascinating.",
-  "Really interesting point.",
-  "Hmm, tell me more.",
-  "I’d like to know more.",
-  "Oh, I see.",
-  "That’s something new to me.",
-  "Interesting, go on.",
-  "Tell me more details.",
-  "I’m curious about that.",
-  "Hmm, that’s very interesting.",
-  "I want to hear more about it.",
-  "Wow, that’s fascinating.",
-  "I see, please explain more.",
-  "That’s a very good point.",
-  "Oh, I hadn’t thought of that.",
-  "Hmm, interesting indeed.",
-  "I like this conversation.",
-  "Please continue, I’m listening.",
-  "That’s amazing!",
-  "Oh, I see now.",
-  "Tell me more, I’m curious.",
-  "That’s quite something to consider.",
-  "Wow, I didn’t know that.",
-  "I see, go on please.",
-  "Hmm, fascinating perspective.",
-  "I want to know more!",
-  "Oh, really interesting.",
-  "Tell me more about that.",
-  "I’m intrigued.",
-  "That’s very interesting.",
-  "Hmm, I see.",
-  "Wow, I like this!",
-  "Please, go on.",
-  "That’s quite intriguing.",
-  "Oh, fascinating!",
-  "I see, tell me more.",
-  "Hmm, I’m listening.",
-  "Wow, please continue.",
-  "That’s a good point!",
-  "I’d like to hear more.",
-  "Interesting, keep going.",
-  "Tell me more, I’m curious.",
-  "I see, that’s insightful.",
-  "Hmm, continue please.",
-  "I like your perspective.",
-  "Go ahead, I’m listening.",
-  "Fascinating, continue.",
-  "Tell me the details.",
-  "I want to understand more.",
-  "Hmm, that’s worth exploring.",
-  "I see, elaborate please.",
-  "Wow, that’s impressive insight.",
-  "Please share more.",
-  "That’s really interesting.",
-  "Continue, I’m intrigued.",
-  "I’d like to learn more.",
-  "That’s quite thought-provoking.",
-  "Tell me everything about that.",
-  "Hmm, please continue your story.",
-  "I’m following along carefully.",
-  "That makes me curious.",
-  "Wow, that’s very insightful.",
-  "I want to know the full story.",
-  "Tell me more, I’m eager.",
-  "Interesting idea, continue please.",
-  "I’d love to hear more details.",
-  "That’s a fascinating observation.",
-  "Hmm, tell me more about it.",
-  "I’m paying close attention.",
-  "Please continue, I’m listening.",
-  "I’m eager to hear more.",
-  "That’s very engaging, continue.",
-  "I’d like to know everything about that.",
-  "Continue, I’m interested.",
-  "Tell me more, I’m curious.",
-  "I’m intrigued, go on.",
-  "Wow, fascinating! Tell me more.",
-  "I see, continue please.",
-  "Hmm, tell me the full story.",
-  "I’m listening attentively.",
-  "Continue your thought, please.",
-  "That’s very compelling.",
-  "Tell me more details, please.",
-  "I’d like to understand more.",
-  "Please elaborate further.",
-  "I’m curious to hear more.",
-  "Go on, I’m paying attention.",
-  "Wow, very interesting indeed.",
-  "Please continue your explanation.",
-  "Tell me more about your idea.",
-  "I’d like to hear the full story.",
-  "Hmm, that’s fascinating.",
-  "I’m eager to learn more.",
-  "Go ahead, I’m listening.",
-  "Please explain more details.",
-  "That’s a valuable perspective.",
-  "I see, continue your thought.",
-  "Hmm, tell me more information.",
-  "I’d love to understand more.",
-  "Please go on, I’m listening.",
-  "That’s really thought-provoking.",
-  "I’m curious to know more.",
-  "Continue, I want to understand.",
-  "Please continue your story.",
-  "I see, tell me everything.",
-  "Hmm, very interesting insight.",
-  "I’d like to hear more examples.",
-  "Please elaborate on that point.",
-  "I’m eager to follow along.",
-  "Tell me all the details, please.",
-  "That’s a fascinating thought.",
-  "Continue explaining, please.",
-  "I want to know more, please.",
-  "Hmm, I’m intrigued, continue.",
-  "I’d like to hear the full details.",
-  "Please continue, I’m curious.",
-  "That’s very interesting, tell me more.",
-  "Go on, I’m eager to understand.",
-  "I’m curious about the full story.",
-  "Continue, I want to hear more.",
-  "Tell me more, I’m attentive.",
-  "Hmm, I’m paying attention, continue.",
-  "Please share the full details.",
-  "I’m very interested, continue.",
-  "Go on, I’m following carefully.",
-  "I’d like to hear more about that.",
-  "Please elaborate further, I’m listening.",
-  "I’m curious, go on please.",
-  "Tell me everything you can.",
-  "I’m paying attention, continue.",
-  "Continue, I’m listening attentively.",
-  "That’s very insightful, tell me more.",
-  "Please explain in more detail.",
-  "I’d like to learn everything about that.",
-  "Go ahead, I’m very interested.",
-  "I want to know all the details.",
-  "Continue explaining, I’m eager.",
-  "Tell me more, I’m fully attentive.",
-  "I’m intrigued, keep going.",
-  "Please continue, I’m very curious.",
-  "I’d love to hear everything about it.",
-  "Continue, I’m paying full attention.",
-  "Tell me more, I’m eager to listen.",
-  "I’m curious, continue your story.",
-  "Go on, I want to understand fully.",
-  "Please explain more, I’m listening carefully.",
-  "I’d like to know every detail.",
-  "Continue, I’m fully engaged.",
-  "Tell me more, I’m following closely.",
-  "I’m attentive, continue please.",
-  "Please share more, I want to know.",
-  "I’m listening, go on.",
-  "Continue, I’m eager to understand.",
-  "Tell me more details, I’m attentive.",
-  "I’m curious, please go on.",
-  "Please elaborate more, I’m following.",
-  "I want to hear the full story, continue.",
-  "Go ahead, I’m paying attention.",
-  "Tell me everything about it, please.",
-  "I’m following closely, continue.",
-  "Please continue your thought, I’m listening.",
-  "I’d like to hear all the details.",
-  "Continue, I want to understand it fully.",
-  "Tell me more, I’m very attentive.",
-  "I’m eager to hear the full story.",
-  "Please continue explaining, I’m listening.",
-  "I’m fully attentive, go on.",
-  "Tell me all the details, I’m curious.",
-  "Continue, I want to hear more.",
-  "Please share everything, I’m following.",
-  "I’m listening carefully, go on.",
-  "Tell me more, I’m paying attention.",
-  "Continue, I want to learn more.",
-  "Please elaborate, I’m attentive.",
-  "I’m following, go on.",
-  "Tell me the full story, please.",
-  "Continue, I’m eager to know more.",
-  "I want to hear all about it, continue.",
-  "Please go on, I’m paying full attention.",
-  "I’m attentive, tell me more.",
-  "Continue explaining, I’m following carefully.",
-  "Tell me all the details, I’m listening.",
-  "I’m eager to hear everything, continue.",
-  "Please share more, I’m paying attention.",
-  "I’m curious, tell me everything.",
-  "Continue, I’m fully listening.",
-  "Tell me more details, I’m eager.",
-  "Please explain fully, I’m following.",
-  "I want to know everything, continue.",
-  "I’m listening carefully, go on.",
-  "Tell me more, I’m attentive.",
-  "Continue, I want to hear the full story.",
-  "Please share every detail, I’m listening.",
-  "I’m following along, continue.",
-  "Tell me everything about it, I’m attentive.",
-  "Continue explaining, I’m very curious.",
-  "I want to understand fully, go on.",
-  "Please continue, I’m eager to learn more.",
-  "I’m listening fully, tell me more.",
-  "Continue, I’m paying close attention.",
-  "Tell me all the details, I’m very attentive.",
-];
-
-// =========================
-// Chatbot functions
-// =========================
+// --- Input line ---
 function createInputLine() {
-  const inputLine = document.createElement('div');
-  inputLine.className = 'input-line';
+  const line = document.createElement("div");
+  line.classList.add("input-line");
 
-  const prompt = document.createElement('span');
-  prompt.className = 'prompt';
-  prompt.textContent = '> ';
+  const prompt = document.createElement("span");
+  prompt.classList.add("prompt");
+  prompt.innerHTML = "&gt; "; // >
 
-  const input = document.createElement('input');
-  input.className = 'user-input';
-  input.type = 'text';
-  input.autofocus = true;
+  const input = document.createElement("input");
+  input.classList.add("user-input");
+  input.type = "text";
+  input.autocomplete = "off";
 
-  inputLine.appendChild(prompt);
-  inputLine.appendChild(input);
-  terminal.appendChild(inputLine);
+  line.appendChild(prompt);
+  line.appendChild(input);
+  terminal.appendChild(line);
   input.focus();
 
-  input.addEventListener('keydown', function (event) {
-    if (event.key === 'Enter') {
+  input.addEventListener("keydown", async (e) => {
+    if (e.key === "Enter" && input.value.trim() !== "") {
       const message = input.value.trim();
-      if (message === '') return;
+      input.disabled = true;
+      line.remove(); // remove input line
 
-      // Replace input with static "You" message
-      const youLine = document.createElement('div');
-      youLine.innerHTML = `> <strong>You:</strong> ${message}`;
-      terminal.replaceChild(youLine, inputLine);
+      addUserMessage(message);
 
-      const reply = generateTinyReply(message);
-      simulateTyping(`Egkelados: ${reply}`, createInputLine);
+      const botLine = addBotMessage("..."); // thinking indicator
+
+      const botResponse = await generateBotResponse(message);
+      botLine.querySelector(".message-text").textContent = botResponse;
+
+      addBlankLine(); // after bot response
+      createInputLine();
+
+      window.scrollTo(0, document.body.scrollHeight); // scroll page to bottom
     }
   });
-
-  scrollToBottom();
 }
 
-// =========================
-// Generate tiny reply
-// =========================
-function generateTinyReply(message) {
-  message = message.toLowerCase();
+// --- Add user message ---
+function addUserMessage(text) {
+  const div = document.createElement("div");
+  div.innerHTML = `> <strong>You:</strong> ${text}`;
+  terminal.appendChild(div);
+}
 
-  // Check keyword-based responses
-  for (let entry of keywordResponses) {
-    for (let kw of entry.keywords) {
-      if (message.includes(kw)) return entry.reply;
-    }
+// --- Add bot message ---
+function addBotMessage(text) {
+  const div = document.createElement("div");
+  div.innerHTML = `<strong>Egkelados:</strong> <span class="message-text">${text}</span>`;
+  terminal.appendChild(div);
+  return div;
+}
+
+// --- Add blank line after bot response ---
+function addBlankLine() {
+  const div = document.createElement("div");
+  div.innerHTML = "&nbsp;";
+  terminal.appendChild(div);
+}
+
+// --- Call Gemini API ---
+async function generateBotResponse(userMessage) {
+  chatHistory.push({ role: "user", parts: [{ text: userMessage }] });
+
+  const requestOptions = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ contents: chatHistory }),
+  };
+
+  try {
+    const response = await fetch(url, requestOptions);
+    const data = await response.json();
+
+    if (!response.ok) throw new Error(data.error?.message || "API Error");
+
+    const botText = data.candidates[0].content.parts[0].text
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .trim();
+
+    chatHistory.push({ role: "model", parts: [{ text: botText }] });
+    return botText;
+  } catch (err) {
+    console.error(err);
+    return `[ERROR] ${err.message}`;
   }
-
-  // Fallback response
-  const idx = Math.floor(Math.random() * fallbackResponses.length);
-  return fallbackResponses[idx];
 }
 
-// =========================
-// Typing simulation
-// =========================
-function simulateTyping(text, callback, speed = 20) {
-  const colonIndex = text.indexOf(':');
-  const prefix = text.slice(0, colonIndex + 1);
-  const messageText = text.slice(colonIndex + 1);
-
-  const botLine = document.createElement('div');
-  const strongPrefix = document.createElement('strong');
-  strongPrefix.textContent = prefix;
-  botLine.appendChild(strongPrefix);
-  terminal.appendChild(botLine);
-
-  let i = 0;
-  function typeChar() {
-    if (i < messageText.length) {
-      botLine.appendChild(document.createTextNode(messageText.charAt(i)));
-      i++;
-      scrollToBottom();
-      setTimeout(typeChar, speed);
-    } else {
-      terminal.appendChild(document.createElement('br'));
-      if (callback) callback();
-    }
-  }
-  typeChar();
-}
-
-// =========================
-// Scroll to bottom
-// =========================
-function scrollToBottom() {
-  terminal.scrollTop = terminal.scrollHeight;
-}
-
-// =========================
-// Header with time
-// =========================
-function updateHeader() {
-  const header = document.getElementById('header');
-
-  function getFormattedDateTime() {
-    const now = new Date();
-    const year = now.getUTCFullYear();
-    const month = String(now.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(now.getUTCDate()).padStart(2, '0');
-    const hours = String(now.getUTCHours()).padStart(2, '0');
-    const minutes = String(now.getUTCMinutes()).padStart(2, '0');
-    const seconds = String(now.getUTCSeconds()).padStart(2, '0');
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds} GMT`;
-  }
-
-  function refresh() {
-    header.textContent = `Egkelados 0.9.5-beta ${getFormattedDateTime()}, HTML/JS`;
-  }
-
-  refresh();
-  setInterval(refresh, 1000);
-}
-
-updateHeader();
+// --- Start first input line ---
+createInputLine();
