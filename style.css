@@ -2,24 +2,23 @@ body {
   background-color: white;
   color: black;
   font-family: 'Courier New', Courier, monospace;
-  margin: 20px;
-  padding: 0;
-}
-
-#header {
-  font-family: 'Courier New', Courier, monospace;
-  color: #bbbbbb;
-  font-weight: normal;
+  margin: 0;
+  padding: 20px;
+  height: 100vh;
+  overflow: hidden;
 }
 
 #terminal {
-  white-space: pre-wrap; /* preserve line breaks */
+  height: 100%;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  display: flex;
+  flex-direction: column;
 }
 
 .input-line {
   display: flex;
   align-items: center;
-  margin-bottom: 2px;
 }
 
 .prompt {
@@ -37,6 +36,14 @@ input.user-input {
   flex-grow: 1;
 }
 
-.message-text {
-  white-space: pre-wrap;
+#header {
+  position: fixed;
+  top: 12px;
+  left: 20px; /* same indent as prompt */
+  font-family: 'Courier New', Courier, monospace;
+  color: #bbbbbb; /* light gray */
+  /* other styles */
+}
+body {
+  padding-top: 30px; /* leave space for header */
 }

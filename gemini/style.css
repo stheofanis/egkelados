@@ -1,0 +1,42 @@
+body {
+  background-color: white;
+  color: black;
+  font-family: 'Courier New', Courier, monospace;
+  margin: 20px;
+  padding: 0;
+}
+
+#header {
+  font-family: 'Courier New', Courier, monospace;
+  color: #bbbbbb;
+  font-weight: normal;
+}
+
+#terminal {
+  white-space: pre-wrap; /* preserve line breaks */
+}
+
+.input-line {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.prompt {
+  margin-right: 5px;
+  color: #333;
+}
+
+input.user-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: black;
+  font-family: inherit;
+  font-size: 1em;
+  flex-grow: 1;
+}
+
+.message-text {
+  white-space: pre-wrap;
+}

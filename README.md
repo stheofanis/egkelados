@@ -7,5 +7,5 @@ Welcome to egkelados - an official artificial intelligence chatterbot.
 Egkelados is a chatterbot which attempts to imitate a human-based conversation by using AI technology.
 You can type any kind of message and Egkelados will reply to your thoughts.
 
-The current application is using by default Gemini API<br>
-Additional implementations are also included by using BotLibre API and a local/offline chatbot that uses a tiny model with fixed patterns
+The current application is using by default a local/offline chatbot that has a tiny model with fixed patterns<br>
+Additional implementations are also included by using BotLibre API and Gemini API
